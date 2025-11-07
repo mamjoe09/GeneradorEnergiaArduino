@@ -3,18 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title> Generador de Energía - Arduino UNO </title>
-  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
-<script>
-  const socket = io("https://generador-energia-arduino.onrender.com");
+  <title>Generador de Energía - Arduino UNO ⚡</title>
 
-  socket.on("datos", (data) => {
-    console.log("Datos recibidos:", data);
-    document.getElementById("voltaje").textContent = data.volt + " V";
-    document.getElementById("corriente").textContent = data.curr + " A";
-    document.getElementById("potencia").textContent = data.pow + " W";
-  });
-</script>
+  <!-- Socket.IO y Chart.js -->
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -115,6 +107,12 @@
       font-size: 0.9rem;
       text-align: center;
     }
+
+    .estado {
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      color: #a8d8ff;
+    }
   </style>
 </head>
 
@@ -123,6 +121,8 @@
     <h1>⚡ Generador de Energía - Arduino UNO ⚡</h1>
     <p>Monitoreo en tiempo real del voltaje, corriente y potencia</p>
   </header>
+
+  <div class="estado" id="estado">🕓 Conectando con el servidor...</div>
 
   <div class="container">
     <div class="card">
@@ -144,15 +144,32 @@
   </div>
 
   <footer>
-    1MB - Generador de Energía con Arduino UNO ⚙️ Desarrollado por Mateo Moglia, Saniago Benitez y Facundo Langone
+    1MB - Generador de Energía con Arduino UNO ⚙️ Desarrollado por Mateo Moglia, Santiago Benítez y Facundo Langone
   </footer>
 
   <script>
-    const socket = io("http://localhost:3000");
     const v = document.getElementById("v");
     const c = document.getElementById("c");
     const p = document.getElementById("p");
+    const estado = document.getElementById("estado");
 
+    // ✅ Conexión con tu backend en Render
+    const socket = io("https://generador-energia-arduino.onrender.com", {
+      transports: ["websocket"],
+    });
+
+    // Estado de conexión
+    socket.on("connect", () => {
+      estado.textContent = "✅ Conectado al servidor Render";
+      estado.style.color = "#00ffcc";
+    });
+
+    socket.on("disconnect", () => {
+      estado.textContent = "❌ Desconectado del servidor";
+      estado.style.color = "red";
+    });
+
+    // Gráfico dinámico
     const ctx = document.getElementById("grafico").getContext("2d");
     const chart = new Chart(ctx, {
       type: "line",
@@ -172,9 +189,7 @@
       },
       options: {
         scales: {
-          x: {
-            display: false
-          },
+          x: { display: false },
           y: {
             beginAtZero: true,
             title: { display: true, text: "Watts", color: "#a8d8ff" },
@@ -188,22 +203,23 @@
       }
     });
 
+    // Escuchar datos del servidor
     socket.on("datos", ({ volt, curr, pow }) => {
       v.textContent = parseFloat(volt).toFixed(2);
       c.textContent = parseFloat(curr).toFixed(2);
       p.textContent = parseFloat(pow).toFixed(2);
 
+      // Actualizar gráfico
       chart.data.labels.push("");
       chart.data.datasets[0].data.push(parseFloat(pow));
+
       if (chart.data.labels.length > 20) {
         chart.data.labels.shift();
         chart.data.datasets[0].data.shift();
       }
+
       chart.update();
     });
   </script>
 </body>
 </html>
-
-
-
