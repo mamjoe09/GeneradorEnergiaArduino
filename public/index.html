@@ -4,7 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title> Generador de Energía - Arduino UNO </title>
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+<script>
+  const socket = io("https://generador-energia-arduino.onrender.com");
+
+  socket.on("datos", (data) => {
+    console.log("Datos recibidos:", data);
+    document.getElementById("voltaje").textContent = data.volt + " V";
+    document.getElementById("corriente").textContent = data.curr + " A";
+    document.getElementById("potencia").textContent = data.pow + " W";
+  });
+</script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -194,5 +204,6 @@
   </script>
 </body>
 </html>
+
 
 
